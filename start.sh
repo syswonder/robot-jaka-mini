@@ -3,7 +3,6 @@
 #
 # Usage:
 #   bash start.sh [manifest]     # default: robonix_manifest.yaml
-#   bash start.sh robonix_manifest.no-motion.yaml
 #
 # The rmw_zenohd router is owned by this script (PID file in rbnx-boot/);
 # a router already running with a matching PID file is reused, not killed.

@@ -86,20 +86,14 @@ the package catalog into `rbnx-boot/cache/` at boot.
 > they're missing. The arm-only stack builds fine without them (the camera
 > primitive is only needed for `pick`).
 
-## Boot (staged acceptance)
+## Boot
 
 ```bash
-# 1. no-motion: soma + robot_description only
-bash start.sh robonix_manifest.no-motion.yaml
-# terminal B:
-rbnx caps -v
-rbnx logs -t soma -f
-
-# 2. read-only arm (motion_enabled: false): feedback streams, no motion
+# read-only (motion_enabled: false): feedback streams, no motion
 bash start.sh
 
-# 3. after estop verification and single-joint tests, enable motion in
-#    robonix_manifest.yaml: jaka_arm.config.motion_enabled: true
+# after estop verification and single-joint tests, enable motion in
+# robonix_manifest.yaml: jaka_arm.config.motion_enabled: true
 ```
 
 Motion commands stay rejected while `motion_enabled: false` (safety gate,
@@ -111,7 +105,6 @@ see `../primitive-jaka-rbnx/config.spec`).
 |---|---|---|
 | static | `rbnx validate ../primitive-jaka-rbnx && rbnx build -f robonix_manifest.yaml` | all packages built |
 | unit | `cd ../primitive-jaka-rbnx && .venv/bin/python -m unittest jaka_arm.tests.test_driver` | 8/8 OK |
-| no-motion boot | `bash start.sh robonix_manifest.no-motion.yaml` | `rbnx caps -v`: soma ACTIVE with 5 body interfaces |
 | read-only arm | `bash start.sh` | joint_states/end_pose stream; gripper state open/unknown sane |
 | single joint | motion_enabled: true, `ros2 topic pub /jaka/joint_command` small delta | joints follow, limits hold, estop works |
 | gripper | gripper_joint close/open | soma reports open / holding |
