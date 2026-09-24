@@ -1,0 +1,146 @@
+manifestVersion: 1
+name: robonix-jaka-mini
+
+catalog:
+  name: robonix.robot.jaka.mini
+  version: 0.1.0
+  description: Robonix deployment for the JAKA Mini arm with TG-9801 gripper.
+  license: Apache-2.0
+  tags: [robot, deploy, arm, jaka, gripper]
+  maintainers:
+    - Felix <xi.lifeng@qq.com>
+
+env:
+  ROS_DOMAIN_ID: "0"
+  RMW_IMPLEMENTATION: rmw_zenoh_cpp
+  ROBONIX_ZENOH_MODE: client
+  ROBONIX_ZENOH_ROUTER: tcp/0.0.0.0:7447
+  # Host-side package code (robot_description provider) runs on `python3`;
+  # its generated gRPC bindings require grpcio>=1.76, which only the
+  # deployment venv has (system python3 pins grpcio 1.73 for JetPack).
+  # Prepend the venv so ANY boot path (plain `rbnx boot` or start.sh) picks
+  # the right interpreter.
+  PATH: "/home/nvidia/robot-jaka-mini/.venv/bin:${PATH}"
+
+system:
+  atlas:
+    listen: 0.0.0.0:50051
+  soma:
+    listen: 0.0.0.0:50091
+    # The ROS 2 runtime reader (soma_runtime_ros.py) needs rclpy from the
+    # /opt/ros/humble install AND the rosidl-generated message modules
+    # (nav_msgs/sensor_msgs/...) from the codegen workspace on PYTHONPATH.
+    # Neither is on the interpreter path by default, so spawn it through a
+    # bash wrapper that sources both setups — independent of how the boot
+    # shell was configured.
+    runtime_reader_command:
+      - bash
+      - -c
+      - "source /opt/ros/humble/setup.bash && source /home/nvidia/primitive-jaka-rbnx/rbnx-build/codegen/ros2_idl/install/setup.bash && exec python3 -u {script} {config}"
+  # execution layer — Pilot sends RTDL plans here
+  executor:
+    listen: 0.0.0.0:50061
+  # interaction layer — VLM planner; env vars come from .vlmkey (see start.sh)
+  pilot:
+    listen: 0.0.0.0:50071
+    vlm:
+      upstream: ${VLM_BASE_URL}
+      api_key: ${VLM_API_KEY}
+      model: ${VLM_MODEL}
+  vitals:
+    listen: 0.0.0.0:50093
+  # user-input gateway (rbnx chat) in front of Pilot
+  liaison:
+    listen: 0.0.0.0:50081
+
+primitive:
+  - name: robot_description
+    url: https://github.com/syswonder/primitive-robot-description-rbnx
+    branch: main
+    # Native mode: robot_state_publisher runs on the host (needs
+    # ros-humble-robot-state-publisher, installed by setup-native-boot.sh).
+    # Keeps the whole deployment docker-free.
+    manifest: package_manifest.native.yaml
+
+  # jaka_arm instance: provider id = name; config is delivered through
+  # Driver(CMD_INIT, config_json). See ../primitive-jaka-rbnx/config.spec.
+  - name: jaka_arm
+    path: ../primitive-jaka-rbnx
+    config:
+      ip: 10.5.5.100
+      # SAFETY GATE: operator enabled motion 2026-09-24. Commands are
+      # rejected while false.
+      motion_enabled: true
+      joint_speed_rad_s: 0.5
+      linear_speed_mm_s: 50.0
+      gripper_force: 50
+      gripper_speed: 1100
+      state_publish_hz: 50.0
+      base_frame: world
+
+  # Orbbec Gemini 336L (USB 2bc5:0807) — same hardware agilex drives, so the
+  # 330-series launch file applies. Provides camera/rgb|depth|camera_info; the
+  # pick skill resolves camera/rgb through atlas. Depth is unused by the 2D
+  # homography pick path but left enabled (cheap; useful for future work).
+  # 1280x720 to match the hand-eye homography image plane — DO NOT drop the
+  # resolution without re-calibrating homography_matrix.
+  - name: orbbec_camera
+    path: ../primitive-orbbec-camera-rbnx
+    config:
+      launch_file: gemini_330_series.launch.py
+      camera_name: camera
+      depth_registration: true
+      enable_d2c_viewer: false
+      color_width: 1280
+      color_height: 720
+      color_fps: 30
+      color_format: MJPG
+      depth_width: 0
+      depth_height: 0
+      depth_fps: 0
+      sentinel_timeout_s: 30.0
+
+skill:
+  # jaka grab/release/pick. grab/release drive jaka_arm's pos/joint_command
+  # from configured poses (no perception). pick adds the camera path: locate a
+  # named object (VLM) -> 2D homography -> grasp XY. grab works uncalibrated;
+  # pick reports "unavailable" until homography_matrix + the VLM are set.
+  # See ../skill-jaka-rbnx/config.spec for every key.
+  - name: jaka
+    path: ../skill-jaka-rbnx
+    config:
+      arm_provider_id: jaka_arm
+      # grab/release poses ([x,y,z,rx,ry,rz], metres + radians, base frame).
+      hover_pose: [0.20, 0.00, 0.275, 3.14159265, 0.0, 0.0]
+      grasp_pose: [0.20, 0.00, 0.125, 3.14159265, 0.0, 0.0]
+      # ── pick (perception) ──
+      camera_provider_id: orbbec_camera
+      # From AIIT-Roboarm (same JAKA controller + base frame):
+      #   config.yaml default_desktop_height=0.125, catch_raise_height=0.15.
+      desktop_height: 0.125
+      travel_offset: 0.15
+      grasp_rpy: [3.14159265, 0.0, 0.0]
+      # VLM locator. Reuses the deploy VLM key (start.sh sources .vlmkey;
+      # rbnx expands ${VAR}). NOTE: VLM_MODEL=deepseek-v4-flash is TEXT-ONLY
+      # (the pilot planner). Live pick DETECTION needs a MULTIMODAL model
+      # (image input) — point vlm_model at a vision model on-site; the wiring
+      # and homography are otherwise complete.
+      vlm_base_url: ${VLM_BASE_URL}
+      vlm_api_key: ${VLM_API_KEY}
+      vlm_model: ${VLM_MODEL}
+      # 2D hand-eye homography (pixel -> arm base_link XY), from
+      # AIIT-Roboarm/arm/hand-eye-data/2d_homography.npy. Solved on
+      # UNDISTORTED 1280x720 frames — matches camera.py (undistort before
+      # projecting) and the camera config below. Re-calibrate if the camera
+      # mount / workspace changes.
+      homography_matrix:
+        - [-0.0012014607200399041, 1.2334616258158349e-05, 0.9363192319869995]
+        - [-1.7852291421149857e-05, 0.0010392841650173068, 0.10209435969591141]
+        - [0.0001262559526367113, -0.0004248072800692171, 1.0]
+      # Intrinsics from AIIT-Roboarm/calibration/intrinsics-data (for
+      # undistortion; the homography was solved on these undistorted pixels).
+      camera_matrix:
+        - [606.7899169921875, 0.0, 639.11328125]
+        - [0.0, 606.9068603515625, 358.1773681640625]
+        - [0.0, 0.0, 1.0]
+      dist_coeffs: [-0.03052361309528351, 0.03451476991176605, 0.00041998623055405915, 0.0002993865346070379, -0.01212006900459528, 0.0, 0.0, 0.0]

@@ -1,0 +1,59 @@
+# Body description for the fixed-base JAKA Mini arm + TG-9801 gripper.
+#
+# urdf.path points at the JAKA app export (urdf/robot.urdf), post-processed:
+# the 6 arm joints were renamed link_002_joint..link_007_joint ->
+# joint_1..joint_6 so they match the joint_states names published by the
+# jaka_arm provider (robot_state_publisher matches by exact name). If the
+# URDF is re-exported from the JAKA app, re-apply this rename.
+# Gripper finger joints (link_008_joint/link_009_joint, prismatic) are kept
+# as exported; the provider publishes a single gripper_joint value.
+urdf:
+  path: ./urdf/robot.urdf
+  root_link: base_link
+  model_name: jaka_mini
+
+robot:
+  id: jaka_mini_01
+  display_name: "JAKA Mini"
+  family: manipulator
+  root_part: arm
+  components:
+    - id: arm
+      type: manipulator
+      urdf_link: base_link
+      urdf_joint: joint_1
+      exports:
+        - provider_id: jaka_arm
+          capabilities:
+            - { path: robonix/primitive/arm/joint_states, description: "Read arm and gripper joints." }
+            - { path: robonix/primitive/arm/joint_command, description: "Command arm joints." }
+            - { path: robonix/primitive/arm/pos_command, description: "Command a Cartesian end-effector target; the provider performs IK." }
+            - { path: robonix/primitive/arm/end_pose, description: "Read the end-effector pose." }
+      components:
+        - id: gripper
+          type: parallel_jaw_gripper
+          urdf_link: link_007
+          state:
+            joint_name: gripper_joint
+            # Full stroke of the TG-9801 (datasheet). Re-calibrate against
+            # the measured open reading during acceptance.
+            open_position_m: 0.098
+            open_tolerance_m: 0.005
+          exports: []
+        - id: camera
+          type: rgbd_camera
+          # Overhead/fixed Orbbec Gemini 336L. Fixed relative to the base;
+          # the pick skill maps RGB pixels to arm base_link XY via a 2D
+          # hand-eye homography (no TF edge / depth needed for that path).
+          urdf_link: base_link
+          exports:
+            - provider_id: orbbec_camera
+              capabilities:
+                - { path: robonix/primitive/camera/rgb, description: "Color image stream (1280x720)." }
+                - { path: robonix/primitive/camera/depth, description: "Depth image aligned to color." }
+                - { path: robonix/primitive/camera/camera_info, description: "Color stream intrinsics." }
+
+description:
+  summary: "Fixed-base JAKA 6-DOF arm with TG-9801 adaptive gripper and an overhead Orbbec Gemini 336L RGBD camera."
+  can_do: ["joint control", "cartesian motion", "gripping", "camera-driven pick of a named object (VLM detection + 2D hand-eye homography)"]
+  cannot_do: ["mobile navigation", "operate without a fixed base", "grasp objects off the calibrated table plane (pick z is a fixed configured height)", "verify grasp success from gripper feedback (TG-9801 RS485 position reads are invalid on this arm)"]

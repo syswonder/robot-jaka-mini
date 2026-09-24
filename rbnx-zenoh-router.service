@@ -1,0 +1,26 @@
+# systemd-owned Zenoh router for the JAKA Mini deployment.
+# Every ROS 2 node in the stack (camera, robot_state_publisher, soma reader)
+# is an rmw_zenoh_cpp CLIENT pointed at tcp/127.0.0.1:7447 — the router must
+# be up before any of them can see each other, so it lives here (autostart on
+# power-on, auto-restart on crash) instead of being spawned per-boot.
+# Install: sudo bash setup-native-boot.sh
+[Unit]
+Description=Robonix Zenoh router (rmw_zenohd) for rmw_zenoh_cpp clients
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nvidia
+# rmw_zenohd links libs spread across /opt/ros/humble/lib AND vendor paths
+# (e.g. opt/zenoh_cpp_vendor/lib) that only setup.bash assembles — sourcing
+# it mirrors exactly how start.sh launches the router.
+ExecStart=/bin/bash -c 'source /opt/ros/humble/setup.bash && exec /opt/ros/humble/lib/rmw_zenoh_cpp/rmw_zenohd'
+Restart=on-failure
+RestartSec=2
+# If 7447 is briefly held by a start.sh-spawned router during the transition,
+# keep retrying instead of giving up after the default 5-attempt limit.
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target
