@@ -26,16 +26,30 @@ controller (jkrc SDK).
 ## Pick skill (camera-driven grasp)
 
 `jaka_pick` locates a named object and grasps it: resolve `camera/rgb` → grab a
-frame → VLM open-vocabulary detection returns a pixel bbox → a calibrated **2D
-hand-eye homography** maps the bbox centre to arm `base_link` XY → grasp at
-`(x, y, desktop_height)` with a fixed vertical-down orientation. It reuses the
-same grasp segment as `grab`.
+frame → detect → a calibrated **2D hand-eye homography** maps the bbox centre
+to arm `base_link` XY → grasp at `(x, y, desktop_height)` with a
+vertical-down orientation. It reuses the same grasp segment as `grab`.
+
+Two detection backends (`detect_scheme` in the skill config):
+
+- **`yolo`** (deploy default): in-process yolo11-obb — the fruit model
+  (`carrot`/`potato`/`tomato`) reused from the agilex deploy at
+  `robot-agilex-robonix/host-services/yolo/weights/best.pt` (set
+  `yolo_model_path`; the skill interpreter has CUDA torch + ultralytics).
+  Two-frame consistency filters flicker; Chinese phrasing maps to class
+  names via `yolo_class_aliases` (胡萝卜→carrot …); the OBB rotation aligns
+  the gripper yaw to the object's long edge
+  (`rz = grasp_yaw_offset_deg - yaw`, default -90 = AIIT's tuned JAKA
+  value — adjust by ±90 if the fingers land off-axis).
+- **`vlm`**: open-vocabulary multimodal detection (pixel bbox, no
+  rotation → fixed `grasp_rpy`).
 
 **Calibration is required and on-site.** `pick` is unavailable until you set,
 in `robonix_manifest.yaml`'s `skill: - name: jaka` config block:
 - `homography_matrix` — 3×3 pixel→base_link, calibrated at 1280×720 (same kind
   of matrix as agilex's `grasp_pose`);
-- `vlm_base_url` / `vlm_api_key` / `vlm_model` — a **multimodal** VLM endpoint;
+- the scheme's detector: `yolo_model_path` (existing weights file) or
+  `vlm_base_url` / `vlm_api_key` / `vlm_model` (**multimodal** endpoint);
 - `desktop_height` — the table height in `base_link` (grasp z).
 
 Until then `pick` returns a clear error; `grab` / `release` are unaffected.

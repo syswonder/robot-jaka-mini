@@ -103,8 +103,10 @@ primitive:
 skill:
   # jaka grab/release/pick. grab/release drive jaka_arm's pos/joint_command
   # from configured poses (no perception). pick adds the camera path: locate a
-  # named object (VLM) -> 2D homography -> grasp XY. grab works uncalibrated;
-  # pick reports "unavailable" until homography_matrix + the VLM are set.
+  # named object (yolo11-obb or VLM backend, detect_scheme) -> 2D homography
+  # -> grasp XY (yolo adds gripper-yaw alignment to the object's long edge).
+  # grab works uncalibrated; pick reports "unavailable" until homography_matrix
+  # + the scheme's detector (yolo weights / VLM endpoint) are set.
   # See ../skill-jaka-rbnx/config.spec for every key.
   - name: jaka
     path: ../skill-jaka-rbnx
@@ -126,11 +128,29 @@ skill:
       # solvable in-limits across radial 0.36-0.38 m.
       travel_offset: 0.06
       grasp_rpy: [3.14159265, 0.0, 0.0]
-      # VLM locator. Reuses the deploy VLM key (start.sh sources .vlmkey;
-      # rbnx expands ${VAR}). NOTE: VLM_MODEL=deepseek-v4-flash is TEXT-ONLY
-      # (the pilot planner). Live pick DETECTION needs a MULTIMODAL model
-      # (image input) — point vlm_model at a vision model on-site; the wiring
-      # and homography are otherwise complete.
+      # ── detection backend ──
+      # yolo = in-process yolo11-obb (classes: carrot/potato/tomato; weights
+      # from the agilex deploy, best.pt) with two-frame consistency and
+      # gripper-yaw alignment to the object's long edge. Set to `vlm` to go
+      # back to the open-vocabulary multimodal path (keys below).
+      detect_scheme: yolo
+      yolo_model_path: /home/nvidia/robot-agilex-robonix/host-services/yolo/weights/best.pt
+      # User phrasing (incl. Chinese) -> yolo class name; substring match
+      # already covers the English names.
+      yolo_class_aliases:
+        胡萝卜: carrot
+        土豆: potato
+        西红柿: tomato
+      # rz = radians(grasp_yaw_offset_deg - deg(yaw)). -90 = AIIT's tuned
+      # JAKA value (jaka_catch_rot_offset_deg) translated to this skill's
+      # euler family. If the fingers land 90/180 deg off the long edge,
+      # tune by ±90 and reboot.
+      grasp_yaw_offset_deg: -90
+      # VLM locator (fallback backend, detect_scheme: vlm). Reuses the deploy
+      # VLM key (start.sh sources .vlmkey; rbnx expands ${VAR}). NOTE:
+      # VLM_MODEL=deepseek-v4-flash is TEXT-ONLY (the pilot planner). Live
+      # pick DETECTION needs a MULTIMODAL model (image input) — point
+      # vlm_model at a vision model on-site.
       vlm_base_url: ${VLM_BASE_URL}
       vlm_api_key: ${VLM_API_KEY}
       vlm_model: ${VLM_MODEL}
