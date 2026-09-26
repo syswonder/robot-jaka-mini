@@ -118,7 +118,13 @@ skill:
       # From AIIT-Roboarm (same JAKA controller + base frame):
       #   config.yaml default_desktop_height=0.125, catch_raise_height=0.15.
       desktop_height: 0.125
-      travel_offset: 0.15
+      # AIIT's catch_raise_height=0.15 does NOT fit this arm's workspace:
+      # hover z = 0.275 with a vertical-down tool is beyond reach at pick
+      # distance (controller kine_inverse returns -4 at radial >= ~0.36 m,
+      # verified 2026-09-26 by probing the controller directly). Max hover
+      # height there is ~0.195-0.235 m depending on radial; 0.185 m is
+      # solvable in-limits across radial 0.36-0.38 m.
+      travel_offset: 0.06
       grasp_rpy: [3.14159265, 0.0, 0.0]
       # VLM locator. Reuses the deploy VLM key (start.sh sources .vlmkey;
       # rbnx expands ${VAR}). NOTE: VLM_MODEL=deepseek-v4-flash is TEXT-ONLY
