@@ -63,9 +63,11 @@ primitive:
     manifest: package_manifest.native.yaml
 
   # jaka_arm instance: provider id = name; config is delivered through
-  # Driver(CMD_INIT, config_json). See ../primitive-jaka-rbnx/config.spec.
+  # Driver(CMD_INIT, config_json). See the package repo's config.spec
+  # (fetched at boot into rbnx-boot/cache/).
   - name: jaka_arm
-    path: ../primitive-jaka-rbnx
+    url: https://github.com/syswonder/primitive-jaka-mini-arm-rbnx
+    branch: main
     config:
       ip: 10.5.5.100
       # SAFETY GATE: operator enabled motion 2026-09-24. Commands are
@@ -85,7 +87,8 @@ primitive:
   # 1280x720 to match the hand-eye homography image plane — DO NOT drop the
   # resolution without re-calibrating homography_matrix.
   - name: orbbec_camera
-    path: ../primitive-orbbec-camera-rbnx
+    url: https://github.com/syswonder/primitive-orbbec-camera-rbnx
+    branch: main
     config:
       launch_file: gemini_330_series.launch.py
       camera_name: camera
@@ -107,9 +110,10 @@ skill:
   # -> grasp XY (yolo adds gripper-yaw alignment to the object's long edge).
   # grab works uncalibrated; pick reports "unavailable" until homography_matrix
   # + the scheme's detector (yolo weights / VLM endpoint) are set.
-  # See ../skill-jaka-rbnx/config.spec for every key.
+  # See the skill repo's config.spec for every key.
   - name: jaka
-    path: ../skill-jaka-rbnx
+    url: https://github.com/syswonder/skill-jaka-rbnx
+    branch: main
     config:
       arm_provider_id: jaka_arm
       # grab/release poses ([x,y,z,rx,ry,rz], metres + radians, base frame).

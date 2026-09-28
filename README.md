@@ -2,8 +2,8 @@
 
 Robonix deployment for the fixed-base **JAKA Mini** 6-DOF arm with a
 **TG-9801** adaptive gripper (end RS485). The arm is driven by the
-[`primitive-jaka-rbnx`](../primitive-jaka-rbnx) package over TCP to the
-controller (jkrc SDK).
+[primitive-jaka-mini-arm-rbnx](https://github.com/syswonder/primitive-jaka-mini-arm-rbnx)
+package over TCP to the controller (jkrc SDK).
 
 ## Hardware & platform
 
@@ -15,13 +15,20 @@ controller (jkrc SDK).
 | platform | Jetson Orin, JetPack 6 (aarch64), ROS 2 Humble + `rmw_zenoh_cpp` |
 | base | fixed (no mobile base, no navigation) |
 
-## Packages (sibling repos)
+## Packages
 
-| package | role |
-|---|---|
-| `../primitive-jaka-rbnx` | arm primitive — `robonix/primitive/arm/*` over jkrc TCP |
-| `../primitive-orbbec-camera-rbnx` | Orbbec camera primitive — `robonix/primitive/camera/{rgb,depth,camera_info}` (Gemini 336L via `gemini_330_series.launch.py`). **Not published** (internal package) — only needed for `pick`; obtain it separately or drop the `orbbec_camera` manifest entry for an arm-only deployment. |
-| `../skill-jaka-rbnx` | grab/release + camera-driven `pick` skill — `robonix/skill/jaka/*` |
+The manifest references all packages by `url:` — `rbnx boot` fetches them
+into `rbnx-boot/cache/` (catalog-resolvable for the package site):
+
+| package | repo | role |
+|---|---|---|
+| `jaka_arm` | [syswonder/primitive-jaka-mini-arm-rbnx](https://github.com/syswonder/primitive-jaka-mini-arm-rbnx) | arm primitive — `robonix/primitive/arm/*` over jkrc TCP |
+| `orbbec_camera` | [syswonder/primitive-orbbec-camera-rbnx](https://github.com/syswonder/primitive-orbbec-camera-rbnx) | Orbbec camera primitive — `robonix/primitive/camera/{rgb,depth,camera_info}` (Gemini 336L via `gemini_330_series.launch.py`) |
+| `jaka` | [syswonder/skill-jaka-rbnx](https://github.com/syswonder/skill-jaka-rbnx) | grab/release + camera-driven `pick` skill — `robonix/skill/jaka/*` |
+
+The sibling checkouts (`../primitive-*-rbnx`, `../skill-jaka-rbnx`) remain
+the development copies; `build.sh` builds them so machine-local paths (e.g.
+soma's codegen overlay) keep working.
 
 ## Pick skill (camera-driven grasp)
 
@@ -73,7 +80,7 @@ publishes a single `gripper_joint` value.
 - Robonix tooling: `make install` from a cloned `syswonder/robonix` checkout,
   then `rbnx setup <robonix source dir>`.
 - `sudo apt install ros-humble-rclpy ros-humble-rmw-zenoh-cpp`
-- Primitive package built: `rbnx build -p ../primitive-jaka-rbnx`
+- Primitive package built: `rbnx build -p ../primitive-jaka-rbnx` (dev sibling checkout; first `bash build.sh` also fetches the url-based packages into `rbnx-boot/cache/`)
 
 ## Build
 
