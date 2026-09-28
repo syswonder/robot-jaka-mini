@@ -20,7 +20,7 @@ controller (jkrc SDK).
 | package | role |
 |---|---|
 | `../primitive-jaka-rbnx` | arm primitive — `robonix/primitive/arm/*` over jkrc TCP |
-| `../primitive-orbbec-camera-rbnx` | Orbbec camera primitive — `robonix/primitive/camera/{rgb,depth,camera_info}` (Gemini 336L via `gemini_330_series.launch.py`) |
+| `../primitive-orbbec-camera-rbnx` | Orbbec camera primitive — `robonix/primitive/camera/{rgb,depth,camera_info}` (Gemini 336L via `gemini_330_series.launch.py`). **Not published** (internal package) — only needed for `pick`; obtain it separately or drop the `orbbec_camera` manifest entry for an arm-only deployment. |
 | `../skill-jaka-rbnx` | grab/release + camera-driven `pick` skill — `robonix/skill/jaka/*` |
 
 ## Pick skill (camera-driven grasp)
