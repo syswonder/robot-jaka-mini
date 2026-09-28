@@ -60,6 +60,17 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+## 5. Git Commits
+
+**Follow the Robonix contribution standard** (https://book.robonix.ai/contributing/robonix).
+
+- Title: Conventional Commits 1.0.0 — `<type>(scope?): <imperative description>`, English imperative mood. Types: `feat` `fix` `docs` `refactor` `test` `perf` `ci` `build` `chore`. Breaking change: add `!` after type/scope and a `BREAKING CHANGE:` note in the body.
+- One commit = one independently reviewable issue. No vague titles ("update", "changes", "fix stuff").
+- Body: explain motivation and impact — why the change is needed and what it affects.
+- Author/committer must be the responsible human (`Felix <xi.lifeng@qq.com>`). AI agents never appear in author/committer fields and never get responsibility trailers (`Co-authored-by`, `Co-developed-by`, `Signed-off-by`, `Reviewed-by`, `Tested-by`, `Acked-by`).
+- Disclose substantive AI assistance with a trailer: `Assisted-by: Claude-Code:glm-5.3` — `agent:model-version`, no email.
+- Never commit secrets (`.vlmkey`), keys, build artifacts (`rbnx-build/`, `rbnx-boot/`, `.venv`), or unrelated local changes.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
