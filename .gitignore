@@ -2,3 +2,4 @@ rbnx-boot/
 logs/
 .venv/
 .vlmkey
+robonix_manifest.local.yaml

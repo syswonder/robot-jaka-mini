@@ -2,7 +2,8 @@
 # Host prep + zenoh router + rbnx boot for the JAKA Mini deployment.
 #
 # Usage:
-#   bash start.sh [manifest]     # default: robonix_manifest.yaml
+#   bash start.sh [manifest]     # default: robonix_manifest.local.yaml
+#                                # (falls back to robonix_manifest.yaml)
 #
 # The rmw_zenohd router is owned by this script (PID file in rbnx-boot/);
 # a router already running with a matching PID file is reused, not killed.
@@ -10,7 +11,12 @@ set -euo pipefail
 
 DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROS_SETUP="${RBNX_ROS_SETUP:-/opt/ros/humble/setup.bash}"
-MANIFEST="${1:-$DEPLOY_DIR/robonix_manifest.yaml}"
+# Local-first: boot the gitignored path-based manifest when present (runs
+# the sibling checkouts, not the rbnx-boot/cache clones); fall back to the
+# committed url-based one elsewhere.
+DEFAULT_MANIFEST="$DEPLOY_DIR/robonix_manifest.local.yaml"
+[[ -f "$DEFAULT_MANIFEST" ]] || DEFAULT_MANIFEST="$DEPLOY_DIR/robonix_manifest.yaml"
+MANIFEST="${1:-$DEFAULT_MANIFEST}"
 
 # Runtime env for every boot child (ROS middleware vars, deployment venv on
 # PATH, ...) lives in the manifest `env:` block — rbnx boot applies it
@@ -111,5 +117,6 @@ PY
 fi
 
 # rbnx boot and its children (soma runtime reader, package start.sh) inherit
-# the ROS environment sourced above.
-rbnx boot -v -f "$MANIFEST"
+# the ROS environment sourced above. --no-update-check: skip the pre-boot
+# per-package `git fetch` (offline / pinned cache; refresh via `rbnx update`).
+rbnx boot -v --no-update-check -f "$MANIFEST"

@@ -17,18 +17,21 @@ package over TCP to the controller (jkrc SDK).
 
 ## Packages
 
-The manifest references all packages by `url:` — `rbnx boot` fetches them
-into `rbnx-boot/cache/` (catalog-resolvable for the package site):
+The committed manifest references all packages by `url:` — catalog-resolvable
+for the package site; `rbnx boot` fetches them into `rbnx-boot/cache/`:
 
 | package | repo | role |
 |---|---|---|
 | `jaka_arm` | [syswonder/primitive-jaka-mini-arm-rbnx](https://github.com/syswonder/primitive-jaka-mini-arm-rbnx) | arm primitive — `robonix/primitive/arm/*` over jkrc TCP |
 | `orbbec_camera` | [syswonder/primitive-orbbec-camera-rbnx](https://github.com/syswonder/primitive-orbbec-camera-rbnx) | Orbbec camera primitive — `robonix/primitive/camera/{rgb,depth,camera_info}` (Gemini 336L via `gemini_330_series.launch.py`) |
-| `jaka` | [syswonder/skill-jaka-rbnx](https://github.com/syswonder/skill-jaka-rbnx) | grab/release + camera-driven `pick` skill — `robonix/skill/jaka/*` |
+| `jaka` | [syswonder/skill-jaka-rbnx](https://github.com/syswonder/skill-jaka-rbnx) | grab/release/home/place + camera-driven `pick` skill — `robonix/skill/jaka/*` |
 
-The sibling checkouts (`../primitive-*-rbnx`, `../skill-jaka-rbnx`) remain
-the development copies; `build.sh` builds them so machine-local paths (e.g.
-soma's codegen overlay) keep working.
+On the deploy machine, a gitignored `robonix_manifest.local.yaml` (same
+content, `path:` instead of `url:` for the three packages above) makes
+`build.sh` / `start.sh` build and boot the sibling checkouts
+(`../primitive-*-rbnx`, `../skill-jaka-rbnx`) directly — no GitHub fetch,
+unpushed local edits take effect. `robot_description` has no local checkout
+and stays `url:` (built from `rbnx-boot/cache/`; refresh with `rbnx update`).
 
 ## Pick skill (camera-driven grasp)
 
@@ -80,7 +83,7 @@ publishes a single `gripper_joint` value.
 - Robonix tooling: `make install` from a cloned `syswonder/robonix` checkout,
   then `rbnx setup <robonix source dir>`.
 - `sudo apt install ros-humble-rclpy ros-humble-rmw-zenoh-cpp`
-- Primitive package built: `rbnx build -p ../primitive-jaka-rbnx` (dev sibling checkout; first `bash build.sh` also fetches the url-based packages into `rbnx-boot/cache/`)
+- Primitive package built: `bash build.sh` (builds the sibling checkouts via the local manifest; a first build on a fresh clone fetches the url-based packages into `rbnx-boot/cache/`)
 
 ## Build
 
@@ -89,9 +92,10 @@ bash build.sh
 ```
 
 `build.sh` is the canonical entry: it prepares the deploy venv, then builds
-`../primitive-jaka-rbnx`, `../primitive-orbbec-camera-rbnx`,
-`../skill-jaka-rbnx`, and both manifests. `robot_description` is fetched from
-the package catalog into `rbnx-boot/cache/` at boot.
+every package declared in the manifest (the local `path:` variant when
+present, else the committed `url:` one) with `--no-update-check` so builds
+stay offline. `robot_description` is fetched from the package catalog into
+`rbnx-boot/cache/` when missing.
 
 > **Camera build note (native):** the Orbbec driver
 > (`../primitive-orbbec-camera-rbnx`) colcon-builds the vendored
@@ -124,7 +128,7 @@ see `../primitive-jaka-rbnx/config.spec`).
 
 | stage | command | expected |
 |---|---|---|
-| static | `rbnx validate ../primitive-jaka-rbnx && rbnx build -f robonix_manifest.yaml` | all packages built |
+| static | `rbnx validate ../primitive-jaka-rbnx && bash build.sh` | all packages built |
 | unit | `cd ../primitive-jaka-rbnx && .venv/bin/python -m unittest jaka_arm.tests.test_driver` | 8/8 OK |
 | read-only arm | `bash start.sh` | joint_states/end_pose stream; gripper state open/unknown sane |
 | single joint | motion_enabled: true, `ros2 topic pub /jaka/joint_command` small delta | joints follow, limits hold, estop works |
