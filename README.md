@@ -24,7 +24,7 @@ for the package site; `rbnx boot` fetches them into `rbnx-boot/cache/`:
 |---|---|---|
 | `jaka_arm` | [syswonder/primitive-jaka-mini-arm-rbnx](https://github.com/syswonder/primitive-jaka-mini-arm-rbnx) | arm primitive — `robonix/primitive/arm/*` over jkrc TCP |
 | `orbbec_camera` | [syswonder/primitive-orbbec-camera-rbnx](https://github.com/syswonder/primitive-orbbec-camera-rbnx) | Orbbec camera primitive — `robonix/primitive/camera/{rgb,depth,camera_info}` (Gemini 336L via `gemini_330_series.launch.py`) |
-| `jaka` | [syswonder/skill-jaka-rbnx](https://github.com/syswonder/skill-jaka-rbnx) | grab/release/home/place + camera-driven `pick` skill — `robonix/skill/jaka/*` |
+| `jaka` | [syswonder/skill-jaka-rbnx](https://github.com/syswonder/skill-jaka-rbnx) | grab/release/home/place + camera-driven `pick` skill (demo branch pins the skill's `demo` and adds fixed-pose `jaka_egg`) — `robonix/skill/jaka/*` |
 
 On the deploy machine, a gitignored `robonix_manifest.local.yaml` (same
 content, `path:` instead of `url:` for the three packages above) makes

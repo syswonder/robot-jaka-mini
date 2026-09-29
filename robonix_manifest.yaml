@@ -75,7 +75,9 @@ primitive:
       motion_enabled: true
       joint_speed_rad_s: 0.5
       linear_speed_mm_s: 50.0
-      gripper_force: 50
+      # 20 (not 50) on this demo branch: eggs crack at higher force
+      # (applied once at connect; verify on a real egg, adjust down/up).
+      gripper_force: 20
       gripper_speed: 1100
       state_publish_hz: 50.0
       base_frame: world
@@ -104,7 +106,9 @@ primitive:
       sentinel_timeout_s: 30.0
 
 skill:
-  # jaka grab/release/home/place/pick. grab/release drive jaka_arm's
+  # jaka grab/release/home/place/pick (+ jaka_egg on this demo branch:
+  # fixed-pose egg pick-and-place at egg_grasp_pose -> egg_place_pose).
+  # grab/release drive jaka_arm's
   # pos/joint_command from configured poses (no perception). home returns
   # the six arm joints to home_joints (default all-zeros) via a joint-space
   # move, gripper untouched. place sets a held object down — by default
@@ -118,12 +122,23 @@ skill:
   # See the skill repo's config.spec for every key.
   - name: jaka
     url: https://github.com/syswonder/skill-jaka-rbnx
-    branch: main
+    # demo (not main): jaka_egg only exists on the skill's demo branch.
+    branch: demo
     config:
       arm_provider_id: jaka_arm
       # grab/release poses ([x,y,z,rx,ry,rz], metres + radians, base frame).
       hover_pose: [0.20, 0.00, 0.275, 3.14159265, 0.0, 0.0]
       grasp_pose: [0.20, 0.00, 0.125, 3.14159265, 0.0, 0.0]
+      # ── egg (demo): fixed-pose pick-and-place ──
+      # Both REQUIRED for jaka_egg; until set it reports unavailable
+      # (grab/release/pick unaffected). Each hover is z + travel_offset
+      # (0.125 + 0.06 = 0.185 m — in reach at this ~0.22 m radial).
+      # Values are config.spec starting points: CALIBRATE on-site (teach
+      # the arm there, `ros2 topic echo /jaka/end_pose --once`) before
+      # trusting them with a real egg. Grip force lives in jaka_arm's
+      # gripper_force above (lowered to 20 for eggs on this branch).
+      egg_grasp_pose: [0.20, -0.15, 0.125, 3.14159265, 0.0, 0.0]
+      egg_place_pose: [0.20, 0.15, 0.125, 3.14159265, 0.0, 0.0]
       # ── pick (perception) ──
       camera_provider_id: orbbec_camera
       # From AIIT-Roboarm (same JAKA controller + base frame):
