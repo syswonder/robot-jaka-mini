@@ -104,8 +104,13 @@ primitive:
       sentinel_timeout_s: 30.0
 
 skill:
-  # jaka grab/release/pick. grab/release drive jaka_arm's pos/joint_command
-  # from configured poses (no perception). pick adds the camera path: locate a
+  # jaka grab/release/home/place/pick. grab/release drive jaka_arm's
+  # pos/joint_command from configured poses (no perception). home returns
+  # the six arm joints to home_joints (default all-zeros) via a joint-space
+  # move, gripper untouched. place sets a held object down — by default
+  # in place (原地放下: current XY at desktop_height); a configured
+  # place_pose overrides. pick adds the camera
+  # path: locate a
   # named object (yolo11-obb or VLM backend, detect_scheme) -> 2D homography
   # -> grasp XY (yolo adds gripper-yaw alignment to the object's long edge).
   # grab works uncalibrated; pick reports "unavailable" until homography_matrix
