@@ -75,8 +75,9 @@ primitive:
       motion_enabled: true
       joint_speed_rad_s: 0.5
       linear_speed_mm_s: 50.0
-      # 20 (not 50) on this demo branch: eggs crack at higher force
-      # (applied once at connect; verify on a real egg, adjust down/up).
+      # 20 (not 50) on this demo branch: the demo object (a raw egg)
+      # cracks at higher force (applied once at connect; verify on the
+      # real object, adjust down/up).
       gripper_force: 20
       gripper_speed: 1100
       state_publish_hz: 50.0
@@ -106,8 +107,9 @@ primitive:
       sentinel_timeout_s: 30.0
 
 skill:
-  # jaka grab/release/home/place/pick (+ jaka_egg on this demo branch:
-  # fixed-pose egg pick-and-place at egg_grasp_pose -> egg_place_pose).
+  # jaka grab/release/home/place/pick (+ jaka_fixed_grasp on this demo
+  # branch: fixed-pose pick-and-place, 固定抓取, at fixed_grasp_pose ->
+  # fixed_place_pose).
   # grab/release drive jaka_arm's
   # pos/joint_command from configured poses (no perception). home returns
   # the six arm joints to home_joints (default all-zeros) via a joint-space
@@ -122,23 +124,25 @@ skill:
   # See the skill repo's config.spec for every key.
   - name: jaka
     url: https://github.com/syswonder/skill-jaka-rbnx
-    # demo (not main): jaka_egg only exists on the skill's demo branch.
+    # demo (not main): jaka_fixed_grasp only exists on the skill's demo
+    # branch.
     branch: demo
     config:
       arm_provider_id: jaka_arm
       # grab/release poses ([x,y,z,rx,ry,rz], metres + radians, base frame).
       hover_pose: [0.20, 0.00, 0.275, 3.14159265, 0.0, 0.0]
       grasp_pose: [0.20, 0.00, 0.125, 3.14159265, 0.0, 0.0]
-      # ── egg (demo): fixed-pose pick-and-place ──
-      # Both REQUIRED for jaka_egg; until set it reports unavailable
-      # (grab/release/pick unaffected). Each hover is z + travel_offset
-      # (0.125 + 0.06 = 0.185 m — in reach at this ~0.22 m radial).
-      # Values are config.spec starting points: CALIBRATE on-site (teach
-      # the arm there, `ros2 topic echo /jaka/end_pose --once`) before
-      # trusting them with a real egg. Grip force lives in jaka_arm's
-      # gripper_force above (lowered to 20 for eggs on this branch).
-      egg_grasp_pose: [0.15, 0.18, 0.125, 3.14159265, 0.0, 0.0]
-      egg_place_pose: [-0.15, 0.18, 0.125, 3.14159265, 0.0, 0.0]
+      # ── fixed_grasp (demo, 固定抓取): fixed-pose pick-and-place ──
+      # Both REQUIRED for jaka_fixed_grasp; until set it reports
+      # unavailable (grab/release/pick unaffected). Each hover is
+      # z + travel_offset (0.125 + 0.06 = 0.185 m — in reach at this
+      # ~0.22 m radial). Values are config.spec starting points:
+      # CALIBRATE on-site (teach the arm there,
+      # `ros2 topic echo /jaka/end_pose --once`) before trusting them
+      # with the real object. Grip force lives in jaka_arm's
+      # gripper_force above (lowered to 20 for the fragile object).
+      fixed_grasp_pose: [0.15, 0.18, 0.125, 3.14159265, 0.0, 0.0]
+      fixed_place_pose: [-0.15, 0.18, 0.125, 3.14159265, 0.0, 0.0]
       # ── pick (perception) ──
       camera_provider_id: orbbec_camera
       # From AIIT-Roboarm (same JAKA controller + base frame):
