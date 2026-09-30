@@ -137,8 +137,8 @@ skill:
       # the arm there, `ros2 topic echo /jaka/end_pose --once`) before
       # trusting them with a real egg. Grip force lives in jaka_arm's
       # gripper_force above (lowered to 20 for eggs on this branch).
-      egg_grasp_pose: [0.20, -0.15, 0.125, 3.14159265, 0.0, 0.0]
-      egg_place_pose: [0.20, 0.15, 0.125, 3.14159265, 0.0, 0.0]
+      egg_grasp_pose: [0.15, 0.18, 0.125, 3.14159265, 0.0, 0.0]
+      egg_place_pose: [-0.15, 0.18, 0.125, 3.14159265, 0.0, 0.0]
       # ── pick (perception) ──
       camera_provider_id: orbbec_camera
       # From AIIT-Roboarm (same JAKA controller + base frame):
