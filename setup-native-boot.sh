@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time host setup for the dockerless deployment:
-#   1. ros-humble-robot-state-publisher (robot_description native mode)
+#   1. ROS 2 runtime deps (robot-state-publisher + nav/sensor msgs)
 #   2. systemd-owned Zenoh router (rmw_zenohd) on tcp/127.0.0.1:7447
 # After this, boot with plain `rbnx boot` (from a shell that has sourced
 # .vlmkey) or `bash start.sh` — both reuse the systemd router.
@@ -11,11 +11,13 @@ set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "must run with sudo" >&2; exit 1; }
 DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo "[setup] installing ros-humble-robot-state-publisher (robot_description native)"
-apt-get install -y ros-humble-robot-state-publisher
+echo "[setup] installing ROS 2 runtime deps (robot-state-publisher, nav/sensor msgs)"
+apt-get install -y ros-humble-robot-state-publisher ros-humble-nav-msgs ros-humble-sensor-msgs
 
 echo "[setup] installing rbnx-zenoh-router systemd service"
-cp "$DEPLOY_DIR/rbnx-zenoh-router.service" /etc/systemd/system/
+# The unit's User= is a placeholder; bind it to the sudo invoker.
+sed "s/^User=.*/User=${SUDO_USER:-nvidia}/" \
+  "$DEPLOY_DIR/rbnx-zenoh-router.service" > /etc/systemd/system/rbnx-zenoh-router.service
 systemctl daemon-reload
 systemctl enable rbnx-zenoh-router
 # If a start.sh-owned router currently holds 7447, the unit keeps retrying

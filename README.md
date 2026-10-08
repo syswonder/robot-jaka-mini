@@ -44,7 +44,8 @@ Two detection backends (`detect_scheme` in the skill config):
 
 - **`yolo`** (deploy default): in-process yolo11-obb — the fruit model
   (`carrot`/`potato`/`tomato`) reused from the agilex deploy at
-  `robot-agilex-robonix/host-services/yolo/weights/best.pt` (set
+  `robot-agilex-robonix/host-services/yolo/weights/best.pt` (point the
+  `YOLO_MODEL_PATH` env var at it — the manifest forwards it to
   `yolo_model_path`; the skill interpreter has CUDA torch + ultralytics).
   Two-frame consistency filters flicker; Chinese phrasing maps to class
   names via `yolo_class_aliases` (胡萝卜→carrot …); the OBB rotation aligns
@@ -58,7 +59,8 @@ Two detection backends (`detect_scheme` in the skill config):
 in `robonix_manifest.yaml`'s `skill: - name: jaka` config block:
 - `homography_matrix` — 3×3 pixel→base_link, calibrated at 1280×720 (same kind
   of matrix as agilex's `grasp_pose`);
-- the scheme's detector: `yolo_model_path` (existing weights file) or
+- the scheme's detector: the `YOLO_MODEL_PATH` env var (weights file,
+  exported like the VLM vars — e.g. in `.vlmkey`) or
   `vlm_base_url` / `vlm_api_key` / `vlm_model` (**multimodal** endpoint);
 - `desktop_height` — the table height in `base_link` (grasp z).
 
@@ -82,7 +84,9 @@ publishes a single `gripper_joint` value.
 
 - Robonix tooling: `make install` from a cloned `syswonder/robonix` checkout,
   then `rbnx setup <robonix source dir>`.
-- `sudo apt install ros-humble-rclpy ros-humble-rmw-zenoh-cpp`
+- `sudo apt install ros-humble-rclpy ros-humble-rmw-zenoh-cpp ros-humble-nav-msgs ros-humble-sensor-msgs`
+  (nav-msgs/sensor-msgs feed the Soma runtime reader — see the
+  `runtime_reader_command` comment in the manifest)
 - Primitive package built: `bash build.sh` (builds the sibling checkouts via the local manifest; a first build on a fresh clone fetches the url-based packages into `rbnx-boot/cache/`)
 
 ## Build
@@ -123,6 +127,11 @@ bash start.sh
 
 Motion commands stay rejected while `motion_enabled: false` (safety gate,
 see `../primitive-jaka-rbnx/config.spec`).
+
+Boot from this directory (`start.sh` does; bare `rbnx boot` should too): the
+manifest's `env.PATH` expands `${PWD}/.venv/bin` — the venv built by
+`build.sh` that gives the `robot_description` provider a new enough grpcio
+for its generated bindings.
 
 ## Acceptance record
 

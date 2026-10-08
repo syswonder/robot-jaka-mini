@@ -18,25 +18,25 @@ env:
   # Host-side package code (robot_description provider) runs on `python3`;
   # its generated gRPC bindings require grpcio>=1.76, which only the
   # deployment venv has (system python3 pins grpcio 1.73 for JetPack).
-  # Prepend the venv so ANY boot path (plain `rbnx boot` or start.sh) picks
-  # the right interpreter.
-  PATH: "/home/nvidia/robot-jaka-mini/.venv/bin:${PATH}"
+  # ${PWD} is expanded by `rbnx boot` at startup, so invoke boot from this
+  # deploy dir (start.sh always does); the venv itself is created by
+  # build.sh.
+  PATH: "${PWD}/.venv/bin:${PATH}"
 
 system:
   atlas:
     listen: 0.0.0.0:50051
   soma:
     listen: 0.0.0.0:50091
-    # The ROS 2 runtime reader (soma_runtime_ros.py) needs rclpy from the
-    # /opt/ros/humble install AND the rosidl-generated message modules
-    # (nav_msgs/sensor_msgs/...) from the codegen workspace on PYTHONPATH.
-    # Neither is on the interpreter path by default, so spawn it through a
-    # bash wrapper that sources both setups — independent of how the boot
-    # shell was configured.
+    # The ROS 2 runtime reader (soma_runtime_ros.py) imports rclpy +
+    # sensor_msgs + nav_msgs; the boot shell may not have ROS sourced, so
+    # source the system ROS install in a bash wrapper. Message modules come
+    # from /opt/ros/humble packages (README prerequisites; no build-tree
+    # path involved). No $VAR here: rbnx expands $VAR/${VAR} at boot.
     runtime_reader_command:
       - bash
       - -c
-      - "source /opt/ros/humble/setup.bash && source /home/nvidia/primitive-jaka-rbnx/rbnx-build/codegen/ros2_idl/install/setup.bash && exec python3 -u {script} {config}"
+      - "source /opt/ros/humble/setup.bash && exec python3 -u {script} {config}"
   # execution layer — Pilot sends RTDL plans here
   executor:
     listen: 0.0.0.0:50061
@@ -162,7 +162,10 @@ skill:
       # gripper-yaw alignment to the object's long edge. Set to `vlm` to go
       # back to the open-vocabulary multimodal path (keys below).
       detect_scheme: yolo
-      yolo_model_path: /home/nvidia/robot-agilex-robonix/host-services/yolo/weights/best.pt
+      # Machine-local weights file (yolo11-obb, e.g. the agilex fruit
+      # best.pt): export YOLO_MODEL_PATH (see .vlmkey). Unset -> pick
+      # reports "unavailable" (yolo_model_path missing).
+      yolo_model_path: ${YOLO_MODEL_PATH}
       # User phrasing (incl. Chinese) -> yolo class name; substring match
       # already covers the English names.
       yolo_class_aliases:

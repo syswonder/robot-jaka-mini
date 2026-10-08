@@ -11,6 +11,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+# Placeholder: setup-native-boot.sh rewrites this to the sudo invoker.
 User=nvidia
 # rmw_zenohd links libs spread across /opt/ros/humble/lib AND vendor paths
 # (e.g. opt/zenoh_cpp_vendor/lib) that only setup.bash assembles — sourcing
