@@ -1,0 +1,9 @@
+export TENCENT_ASR_APPID=
+export TENCENTCLOUD_SECRET_ID=
+export TENCENTCLOUD_SECRET_KEY=
+
+export YOLO_MODEL_PATH=
+
+export VLM_API_KEY=
+export VLM_BASE_URL=https://api.deepseek.com
+export VLM_MODEL=deepseek-v4-flash
