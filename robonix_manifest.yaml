@@ -82,6 +82,13 @@ primitive:
       gripper_speed: 1100
       state_publish_hz: 50.0
       base_frame: world
+      # Exit homing: on boot teardown (Ctrl-C / `rbnx shutdown`) the gripper
+      # opens (releasing any held object), then the arm returns here before
+      # power-off. All-zeros = JAKA reference pose, matching the skill's
+      # jaka_home default; calibrate on-site if a safer park pose is wanted.
+      # Only honored while motion_enabled is true. Absent key = no motion on
+      # exit.
+      shutdown_home_joints: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
   # Orbbec Gemini 336L (USB 2bc5:0807) — same hardware agilex drives, so the
   # 330-series launch file applies. Provides camera/rgb|depth|camera_info; the
@@ -107,9 +114,8 @@ primitive:
       sentinel_timeout_s: 30.0
 
 skill:
-  # jaka grab/release/home/place/pick (+ jaka_fixed_grasp on this demo
-  # branch: fixed-pose pick-and-place, 固定抓取, at fixed_grasp_pose ->
-  # fixed_place_pose).
+  # jaka grab/release/home/place/pick (+ jaka_fixed_grasp: fixed-pose
+  # pick-and-place, 固定抓取, at fixed_grasp_pose -> fixed_place_pose).
   # grab/release drive jaka_arm's
   # pos/joint_command from configured poses (no perception). home returns
   # the six arm joints to home_joints (default all-zeros) via a joint-space

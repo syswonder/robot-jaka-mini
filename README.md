@@ -118,8 +118,11 @@ stay offline. `robot_description` is fetched from the package catalog into
 ## Boot
 
 ```bash
-# read-only (motion_enabled: false): feedback streams, no motion
-bash start.sh
+# standard entry — committed url manifest, packages from rbnx-boot/cache/
+rbnx boot
+
+# offline / pinned cache: skip the pre-boot per-package `git fetch`
+rbnx boot --no-update-check
 
 # after estop verification and single-joint tests, enable motion in
 # robonix_manifest.yaml: jaka_arm.config.motion_enabled: true
@@ -128,10 +131,31 @@ bash start.sh
 Motion commands stay rejected while `motion_enabled: false` (safety gate,
 see `../primitive-jaka-rbnx/config.spec`).
 
-Boot from this directory (`start.sh` does; bare `rbnx boot` should too): the
-manifest's `env.PATH` expands `${PWD}/.venv/bin` — the venv built by
+Bare `rbnx boot` resolves every package to its `rbnx-boot/cache/` clone
+(no sibling checkouts needed). Per-machine prerequisites:
+
+- the proprietary jkrc SDK copied into the arm's cache clone — gitignored
+  there, and `rbnx update` only fast-forwards (never cleans), so it
+  survives updates:
+  `cp ../primitive-jaka-rbnx/jaka_arm/jaka_sdk/aarch64-linux-gnu/{jkrc.so,libjakaAPI.so} rbnx-boot/cache/primitive-jaka-mini-arm-rbnx/jaka_arm/jaka_sdk/aarch64-linux-gnu/`
+- `.vlmkey` vars in the booting shell — `bash start.sh` sources them,
+  bare boot cannot (this machine's `~/.zshrc` does).
+- on a fresh machine, `bash build.sh` once before the first boot — it
+  prepares the deploy venv and the codegen interpreter the packages'
+  builds need (`rbnx boot`'s inline-build fallback does not set it).
+
+The pre-boot freshness check only *reports*; it never pulls. When it marks
+a provider behind, run `rbnx update` (needs network) before booting.
+
+The manifest's `env.PATH` expands `${PWD}/.venv/bin` — the venv built by
 `build.sh` that gives the `robot_description` provider a new enough grpcio
-for its generated bindings.
+for its generated bindings; boot from this directory.
+
+Development against unpushed sibling edits uses the gitignored
+`robonix_manifest.local.yaml` (`path:` entries): `build.sh` and `start.sh`
+prefer it (`start.sh` also sources ROS + `.vlmkey` and owns the
+zenoh-router lifecycle). Push, then `rbnx update`, to give bare boot the
+same code.
 
 ## Acceptance record
 
@@ -145,7 +169,7 @@ for its generated bindings.
 | camera | `bash start.sh`, `rbnx caps -v` | orbbec_camera ACTIVE; `camera/rgb` streams 1280×720 |
 | pick (dry) | set VLM + homography, `jaka_pick {object}` before enabling motion | detect + geometry resolve; motion times out with `motion_enabled` hint |
 | pick (live) | motion_enabled: true, calibrated | arm descends on the detected object, closes, lifts |
-| shutdown | Ctrl-C | motion stops, arm powered off, logs clean |
+| shutdown | Ctrl-C | gripper opens, arm returns to `shutdown_home_joints` (all-zeros), motion stops, arm powered off, logs clean |
 
 Fill in the robot revision, Robonix commit (`git -C <robonix> rev-parse HEAD`)
 and measured gripper open reading here after acceptance.
