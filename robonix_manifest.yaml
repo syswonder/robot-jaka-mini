@@ -124,9 +124,7 @@ skill:
   # See the skill repo's config.spec for every key.
   - name: jaka
     url: https://github.com/syswonder/skill-jaka-rbnx
-    # demo (not main): jaka_fixed_grasp only exists on the skill's demo
-    # branch.
-    branch: demo
+    branch: main
     config:
       arm_provider_id: jaka_arm
       # grab/release poses ([x,y,z,rx,ry,rz], metres + radians, base frame).
