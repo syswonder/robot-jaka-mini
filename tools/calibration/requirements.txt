@@ -1,0 +1,10 @@
+# JAKA Mini 手眼标定工具的运行依赖（宿主上直接跑；不需要 ROS，也不需要 robonix）。
+# 版本取自实机验证过的 AIIT-Roboarm/.venv（Python 3.10.12 / Jetson aarch64）——
+# 标定结果对像素口径敏感，这里按实测版本钉死，不做浮动。
+# 必须 Python 3.10：臂包里的 jkrc.so 是 3.10 构建的扩展（见 setup_venv.sh 的断言）。
+numpy==2.2.6
+opencv-python==5.0.0.93
+pyorbbecsdk2==2.0.18
+PyYAML==6.0.3
+flask==3.1.3
+scipy==1.15.3

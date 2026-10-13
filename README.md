@@ -50,7 +50,7 @@ Two detection backends (`detect_scheme` in the skill config):
   Two-frame consistency filters flicker; Chinese phrasing maps to class
   names via `yolo_class_aliases` (胡萝卜→carrot …); the OBB rotation aligns
   the gripper yaw to the object's long edge
-  (`rz = grasp_yaw_offset_deg - yaw`, default -90 = AIIT's tuned JAKA
+  (`rz = grasp_yaw_offset_deg - yaw`, default -90 = this arm's tuned
   value — adjust by ±90 if the fingers land off-axis).
 - **`vlm`**: open-vocabulary multimodal detection (pixel bbox, no
   rotation → fixed `grasp_rpy`).
@@ -65,6 +65,33 @@ in `robonix_manifest.yaml`'s `skill: - name: jaka` config block:
 - `desktop_height` — the table height in `base_link` (grasp z).
 
 Until then `pick` returns a clear error; `grab` / `release` are unaffected.
+
+## Calibration
+
+`jaka_pick`'s `homography_matrix` is measured on site with the in-tree bench
+under `tools/calibration/` — a cv2-GUI tool (served as a browser page on
+headless machines) for this JAKA Mini + Gemini 336L pair. The arm side reuses
+`primitive-jaka-rbnx`'s
+`JakaDriver` (probed from the sibling checkout or `rbnx-boot/cache/`), so the
+tool ships no jkrc/gripper code and no SDK binaries; the intrinsics
+(`camera_matrix` / `dist_coeffs`) ship as data in
+`tools/calibration/intrinsics-data/`.
+
+Run it with robonix **stopped** (the camera and the controller are
+single-owner), workspace clear, estop at hand:
+
+```bash
+bash tools/calibration/setup_venv.sh
+cd tools/calibration && .venv/bin/python calibrate_handeye_2d.py            # default: calibrate
+cd tools/calibration && .venv/bin/python calibrate_handeye_2d.py --mode test
+```
+
+The tool prints the fitted matrix as ready-to-paste YAML rows; hand-copy it
+into `homography_matrix` in **both** `robonix_manifest.yaml` and
+`robonix_manifest.local.yaml`. `desktop_height` is *not* produced by the tool.
+The matrix is only valid at 1280×720 on undistorted frames — the tool pins
+the stream and warns loudly on any fallback. Full flow and gotchas:
+`tools/calibration/README.md` (Chinese).
 
 ## URDF
 

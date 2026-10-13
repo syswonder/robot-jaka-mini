@@ -189,17 +189,18 @@ skill:
       vlm_base_url: ${VLM_BASE_URL}
       vlm_api_key: ${VLM_API_KEY}
       vlm_model: ${VLM_MODEL}
-      # 2D hand-eye homography (pixel -> arm base_link XY), from
-      # AIIT-Roboarm/arm/hand-eye-data/2d_homography.npy. Solved on
-      # UNDISTORTED 1280x720 frames — matches camera.py (undistort before
-      # projecting) and the camera config below. Re-calibrate if the camera
-      # mount / workspace changes.
+      # 2D hand-eye homography (pixel -> arm base_link XY), solved by the
+      # in-tree bench at tools/calibration/ (ported from AIIT-Roboarm).
+      # Solved on UNDISTORTED 1280x720 frames — matches camera.py (undistort
+      # before projecting) and the camera config below. Re-run the bench if
+      # the camera mount / workspace changes.
       homography_matrix:
         - [-0.0012014607200399041, 1.2334616258158349e-05, 0.9363192319869995]
         - [-1.7852291421149857e-05, 0.0010392841650173068, 0.10209435969591141]
         - [0.0001262559526367113, -0.0004248072800692171, 1.0]
-      # Intrinsics from AIIT-Roboarm/calibration/intrinsics-data (for
-      # undistortion; the homography was solved on these undistorted pixels).
+      # Intrinsics (AIIT data, shipped in tools/calibration/intrinsics-data/;
+      # for undistortion — the homography was solved on these undistorted
+      # pixels). Not produced by the bench.
       camera_matrix:
         - [606.7899169921875, 0.0, 639.11328125]
         - [0.0, 606.9068603515625, 358.1773681640625]

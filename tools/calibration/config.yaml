@@ -1,0 +1,22 @@
+# robot-jaka-mini 2D 手眼标定工具的配置——每个键都注明谁在读它。
+# 数据路径不在这里：内参在 intrinsics-data/，产物写到 artifacts/。
+
+# ===== 机械臂 =====
+# JAKA 控制器 IP（calib_arm.py 交给臂包的 JakaDriver 登录）
+arm_port: 10.5.5.100
+# 含 jaka_arm/driver.py 的臂包根目录；空 = 自动探测
+# （sibling ../primitive-jaka-rbnx → rbnx-boot/cache/* → 部署根同级目录）
+jaka_arm_package_path: ""
+# JakaDriver 运动参数（标定想更慢更稳就调小）
+joint_speed_rad_s: 1.0
+linear_speed_mm_s: 100.0
+# move_to 的 RZ 偏移（度）——与清单 skill.jaka.config.grasp_yaw_offset_deg 同源
+jaka_catch_rot_offset_deg: -90
+
+# ===== 手眼标定 =====
+# 验证模式映射点的 z（米）——必须与清单 skill.jaka.config.desktop_height 一致
+default_desktop_height: 0.125
+
+# ===== 相机与显示 =====
+# utils/cv2_display.py 的网页显示端口；置空则用 OpenCV 窗口（无显示器环境会失败）
+cv2_headless_port: 8079
