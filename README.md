@@ -132,12 +132,9 @@ Motion commands stay rejected while `motion_enabled: false` (safety gate,
 see `../primitive-jaka-rbnx/config.spec`).
 
 Bare `rbnx boot` resolves every package to its `rbnx-boot/cache/` clone
-(no sibling checkouts needed). Per-machine prerequisites:
+(no sibling checkouts needed); the jkrc SDK ships inside the arm package
+(Apache-2.0), so no manual copy is needed. Per-machine prerequisites:
 
-- the proprietary jkrc SDK copied into the arm's cache clone — gitignored
-  there, and `rbnx update` only fast-forwards (never cleans), so it
-  survives updates:
-  `cp ../primitive-jaka-rbnx/jaka_arm/jaka_sdk/aarch64-linux-gnu/{jkrc.so,libjakaAPI.so} rbnx-boot/cache/primitive-jaka-mini-arm-rbnx/jaka_arm/jaka_sdk/aarch64-linux-gnu/`
 - `.vlmkey` vars in the booting shell — `bash start.sh` sources them,
   bare boot cannot (this machine's `~/.zshrc` does).
 - on a fresh machine, `bash build.sh` once before the first boot — it
