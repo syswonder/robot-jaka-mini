@@ -93,6 +93,19 @@ The matrix is only valid at 1280×720 on undistorted frames — the tool pins
 the stream and warns loudly on any fallback. Full flow and gotchas:
 `tools/calibration/README.md` (Chinese).
 
+## Estop recovery
+
+After the emergency stop is released (pendant knob pulled up; the controller is
+usually powered off), `tools/jaka_estop_recover.py` resets it over raw jkrc:
+clear error → power on → enable → confirmation → slow move to Home (all-zeros)
+→ disable and power off. It reuses the calibration bench's plumbing (arm package
+probe, `arm_port` from `tools/calibration/config.yaml`, the Python 3.10 venv) and
+bypasses the runtime's `motion_enabled` gate — run it with robonix **stopped**:
+
+```bash
+tools/calibration/.venv/bin/python tools/jaka_estop_recover.py
+```
+
 ## URDF
 
 `urdf/robot.urdf` is the JAKA app export of the real JAKA Mini
