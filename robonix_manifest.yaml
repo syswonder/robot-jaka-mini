@@ -8,7 +8,7 @@ catalog:
   license: Apache-2.0
   tags: [robot, deploy, arm, jaka, gripper]
   maintainers:
-    - Felix <xi.lifeng@qq.com>
+    - Felix Xi <xi.lifeng@qq.com>
 
 env:
   ROS_DOMAIN_ID: "0"
