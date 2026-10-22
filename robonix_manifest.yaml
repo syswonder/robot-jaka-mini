@@ -66,7 +66,7 @@ primitive:
   # Driver(CMD_INIT, config_json). See the package repo's config.spec
   # (fetched at boot into rbnx-boot/cache/).
   - name: jaka_arm
-    url: https://github.com/syswonder/primitive-jaka-mini-arm-rbnx
+    url: https://github.com/syswonder/primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx
     branch: main
     config:
       ip: 10.5.5.100
@@ -129,7 +129,7 @@ skill:
   # + the scheme's detector (yolo weights / VLM endpoint) are set.
   # See the skill repo's config.spec for every key.
   - name: jaka
-    url: https://github.com/syswonder/skill-jaka-rbnx
+    url: https://github.com/syswonder/skill-jaka-grasp-rbnx
     branch: main
     config:
       arm_provider_id: jaka_arm

@@ -2,7 +2,7 @@
 
 Robonix deployment for the fixed-base **JAKA Mini** 6-DOF arm with a
 **TG-9801** adaptive gripper (end RS485). The arm is driven by the
-[primitive-jaka-mini-arm-rbnx](https://github.com/syswonder/primitive-jaka-mini-arm-rbnx)
+[primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx](https://github.com/syswonder/primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx)
 package over TCP to the controller (jkrc SDK).
 
 ## Hardware & platform
@@ -22,14 +22,14 @@ for the package site; `rbnx boot` fetches them into `rbnx-boot/cache/`:
 
 | package | repo | role |
 |---|---|---|
-| `jaka_arm` | [syswonder/primitive-jaka-mini-arm-rbnx](https://github.com/syswonder/primitive-jaka-mini-arm-rbnx) | arm primitive — `robonix/primitive/arm/*` over jkrc TCP |
+| `jaka_arm` | [syswonder/primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx](https://github.com/syswonder/primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx) | arm primitive — `robonix/primitive/arm/*` over jkrc TCP |
 | `orbbec_camera` | [syswonder/primitive-orbbec-camera-rbnx](https://github.com/syswonder/primitive-orbbec-camera-rbnx) | Orbbec camera primitive — `robonix/primitive/camera/{rgb,depth,camera_info}` (Gemini 336L via `gemini_330_series.launch.py`) |
-| `jaka` | [syswonder/skill-jaka-rbnx](https://github.com/syswonder/skill-jaka-rbnx) | grab/release/home/place + camera-driven `pick` skill (fixed-pose `jaka_fixed_grasp`, 固定抓取) — `robonix/skill/jaka/*` |
+| `jaka` | [syswonder/skill-jaka-grasp-rbnx](https://github.com/syswonder/skill-jaka-grasp-rbnx) | grab/release/home/place + camera-driven `pick` skill (fixed-pose `jaka_fixed_grasp`, 固定抓取) — `robonix/skill/jaka/*` |
 
 On the deploy machine, a gitignored `robonix_manifest.local.yaml` (same
 content, `path:` instead of `url:` for the three packages above) makes
 `build.sh` / `start.sh` build and boot the sibling checkouts
-(`../primitive-*-rbnx`, `../skill-jaka-rbnx`) directly — no GitHub fetch,
+(`../primitive-*-rbnx`, `../skill-jaka-grasp-rbnx`) directly — no GitHub fetch,
 unpushed local edits take effect. `robot_description` has no local checkout
 and stays `url:` (built from `rbnx-boot/cache/`; refresh with `rbnx update`).
 
@@ -71,7 +71,7 @@ Until then `pick` returns a clear error; `grab` / `release` are unaffected.
 `jaka_pick`'s `homography_matrix` is measured on site with the in-tree bench
 under `tools/calibration/` — a cv2-GUI tool (served as a browser page on
 headless machines) for this JAKA Mini + Gemini 336L pair. The arm side reuses
-`primitive-jaka-rbnx`'s
+`primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx`'s
 `JakaDriver` (probed from the sibling checkout or `rbnx-boot/cache/`), so the
 tool ships no jkrc/gripper code and no SDK binaries; the intrinsics
 (`camera_matrix` / `dist_coeffs`) ship as data in
@@ -169,7 +169,7 @@ rbnx boot --no-update-check
 ```
 
 Motion commands stay rejected while `motion_enabled: false` (safety gate,
-see `../primitive-jaka-rbnx/config.spec`).
+see `../primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx/config.spec`).
 
 Bare `rbnx boot` resolves every package to its `rbnx-boot/cache/` clone
 (no sibling checkouts needed); the jkrc SDK ships inside the arm package
@@ -198,8 +198,8 @@ same code.
 
 | stage | command | expected |
 |---|---|---|
-| static | `rbnx validate ../primitive-jaka-rbnx && bash build.sh` | all packages built |
-| unit | `cd ../primitive-jaka-rbnx && .venv/bin/python -m unittest jaka_arm.tests.test_driver` | 8/8 OK |
+| static | `rbnx validate ../primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx && bash build.sh` | all packages built |
+| unit | `cd ../primitive-jaka-mini_with_tg9801_gripper-arm_gripper-rbnx && .venv/bin/python -m unittest jaka_arm.tests.test_driver` | 8/8 OK |
 | read-only arm | `bash start.sh` | joint_states/end_pose stream; gripper state open/unknown sane |
 | single joint | motion_enabled: true, `ros2 topic pub /jaka/joint_command` small delta | joints follow, limits hold, estop works |
 | gripper | gripper_joint close/open | soma reports open / holding |
