@@ -1,4 +1,4 @@
-# robot-jaka-mini — JAKA Mini Robonix deployment
+# robot-jaka-mini_with_tg9801_gripper — JAKA Mini Robonix deployment
 
 Robonix deployment for the fixed-base **JAKA Mini** 6-DOF arm with a
 **TG-9801** adaptive gripper (end RS485). The arm is driven by the

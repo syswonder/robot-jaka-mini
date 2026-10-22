@@ -1,8 +1,8 @@
 manifestVersion: 1
-name: robonix-jaka-mini
+name: robonix-jaka-mini_with_tg9801_gripper
 
 catalog:
-  name: robonix.robot.jaka.mini
+  name: robonix.robot.jaka.mini_with_tg9801_gripper
   version: 0.1.0
   description: Robonix deployment for the JAKA Mini arm with TG-9801 gripper.
   license: Apache-2.0
