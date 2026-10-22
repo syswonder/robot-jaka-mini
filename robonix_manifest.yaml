@@ -133,6 +133,9 @@ skill:
     branch: main
     config:
       arm_provider_id: jaka_arm
+      # REQUIRED by the skill: this body is the TG-9801 gripper. The skill
+      # reads gripper_joint (m) directly for its width/verdict thresholds.
+      end_effector: gripper
       # grab/release poses ([x,y,z,rx,ry,rz], metres + radians, base frame).
       hover_pose: [0.20, 0.00, 0.275, 3.14159265, 0.0, 0.0]
       grasp_pose: [0.20, 0.00, 0.125, 3.14159265, 0.0, 0.0]
